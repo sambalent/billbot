@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Three.js Sample Project</title>
+  <title>Fountain Garden - 3D Explorer</title>
   <style>
     * {
       margin: 0;
@@ -24,13 +24,70 @@
       font-family: Arial, sans-serif;
       font-size: 14px;
       background: rgba(0, 0, 0, 0.7);
-      padding: 10px 15px;
-      border-radius: 5px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      max-width: 280px;
+      line-height: 1.6;
+    }
+    #info h2 {
+      margin-bottom: 10px;
+      color: #7dd3fc;
+    }
+    #info .controls {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    #info kbd {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    #blocker {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    #blocker .message {
+      text-align: center;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    #blocker h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #7dd3fc;
+    }
+    #blocker p {
+      font-size: 18px;
+      opacity: 0.8;
     }
   </style>
 </head>
 <body>
-  <div id="info">Three.js Sample - Rotating Cube</div>
+  <div id="blocker">
+    <div class="message">
+      <h1>🌊 Fountain Garden</h1>
+      <p>Click to explore</p>
+    </div>
+  </div>
+  <div id="info">
+    <h2>🌳 Fountain Garden</h2>
+    <div class="controls">
+      <strong>Controls:</strong><br>
+      <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> - Move<br>
+      <kbd>Mouse</kbd> - Look around<br>
+      <kbd>Space</kbd> - Jump<br>
+      <kbd>Shift</kbd> - Run<br>
+      <kbd>ESC</kbd> - Release mouse
+    </div>
+  </div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
