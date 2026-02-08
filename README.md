@@ -1,90 +1,115 @@
-# Three.js Docker Sample Project
+# Bi11bot - Interactive 3D Fountain Garden
 
-A sample Three.js project with Docker support featuring an animated 3D scene with rotating geometric shapes.
+An immersive 3D environment built with Three.js where users can explore a fountain garden and interact with bi11bot, an AI-powered character using the Grok API.
 
-## 🎮 Features
+## Overview
 
-- Rotating cube, torus knot, and sphere
-- Responsive design
-- Vite for fast development
-- Docker support for both development and production
+Bi11bot is an interactive experience that combines first-person 3D exploration with conversational AI. Users navigate through a detailed garden environment featuring a central fountain, stone walls, trees, and flower beds. The main attraction is bi11bot, a friendly character who responds to user messages using the xAI Grok API.
 
-## 📁 Project Structure
+## Features
+
+### 3D Environment
+- First-person exploration with WASD movement controls
+- Central multi-tiered fountain with animated water particles
+- Inner and outer stone ring walls with gates and towers
+- Decorative elements including trees, benches, flower beds, and lamp posts
+- Dynamic sky with drifting clouds
+- Realistic lighting with shadows
+
+### AI Character - bi11bot
+- 3D character model positioned near the fountain
+- Always faces the player as they move around
+- Speech bubble display above the character
+- Click-to-chat interaction system
+- Powered by the xAI Grok API for conversational responses
+
+### Controls
+- W/A/S/D - Movement
+- Mouse - Look around
+- Space - Jump
+- Shift - Run
+- ESC - Release mouse control
+- Click on bi11bot - Open chat interface
+
+## Project Structure
 
 ```
 billbot/
 ├── src/
-│   └── main.js          # Main Three.js scene
-├── index.html           # Entry HTML file
-├── package.json         # Node.js dependencies
-├── vite.config.js       # Vite configuration
-├── Dockerfile           # Production Docker image
-├── Dockerfile.dev       # Development Docker image
-├── docker-compose.yml   # Docker Compose configuration
-├── nginx.conf           # Nginx configuration for production
-├── .dockerignore        # Docker ignore file
-└── .gitignore           # Git ignore file
+│   └── main.js              # Main Three.js application
+├── index.html               # Entry HTML with chat UI styles
+├── package.json             # Node.js dependencies
+├── vite.config.js           # Vite configuration with env handling
+├── .env                     # API keys (not committed)
+├── Dockerfile               # Production Docker image
+├── Dockerfile.dev           # Development Docker image
+├── docker-compose.yml       # Docker Compose configuration
+└── nginx.conf               # Nginx configuration for production
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
-### Without Docker
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- An xAI API key for Grok
 
-1. Install dependencies:
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/sambalent/billbot.git
+   cd billbot
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Start development server:
+3. Create a `.env` file in the project root:
+   ```
+   VITE_XAI_API_KEY=your_xai_api_key_here
+   ```
+
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
-3. Open http://localhost:5173 in your browser
+5. Open http://localhost:5173 in your browser
 
-### With Docker (Development)
+### Docker Deployment
 
-1. Start the development container with hot reload:
-   ```bash
-   docker-compose up dev
-   ```
-
-2. Open http://localhost:5173 in your browser
-
-### With Docker (Production)
-
-1. Build and start the production container:
-   ```bash
-   docker-compose up prod --build
-   ```
-
-2. Open http://localhost:8080 in your browser
-
-## 🐳 Docker Commands
-
+Development with hot reload:
 ```bash
-# Build development image
-docker build -f Dockerfile.dev -t threejs-dev .
-
-# Build production image
-docker build -t threejs-prod .
-
-# Run development container
-docker run -p 5173:5173 -v $(pwd):/app -v /app/node_modules threejs-dev
-
-# Run production container
-docker run -p 8080:80 threejs-prod
+docker-compose up dev
 ```
 
-## 📦 Scripts
+Production build:
+```bash
+docker-compose up prod --build
+```
+
+## API Configuration
+
+The application uses the xAI Grok API for bi11bot's responses. The API is called directly from the frontend using the endpoint `https://api.x.ai/v1/chat/completions` with the `grok-3-latest` model.
+
+If the API is unavailable, the application falls back to predefined responses.
+
+## Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- [Three.js](https://threejs.org/) - 3D Graphics Library
-- [Vite](https://vitejs.dev/) - Frontend Build Tool
-- [Docker](https://www.docker.com/) - Containerization
-- [Nginx](https://nginx.org/) - Web Server (Production)
+- Three.js - 3D graphics rendering
+- Vite - Frontend build tool and development server
+- xAI Grok API - Conversational AI
+- Docker - Containerization
+- Nginx - Production web server
+
+## License
+
+MIT

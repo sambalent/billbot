@@ -1350,13 +1350,15 @@ const clickHint = document.getElementById('clickHint');
 
 let isChatOpen = false;
 
-// API endpoint configuration - change this to your actual API endpoint
-const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions'; // Example endpoint
-const API_KEY = ''; // Add your API key here if needed
+// Grok API configuration
+const XAI_API_KEY = import.meta.env.VITE_XAI_API_KEY;
+console.log('API Key loaded:', XAI_API_KEY ? `${XAI_API_KEY.substring(0, 6)}...` : 'MISSING');
+const GROK_API_ENDPOINT = '/api/grok/chat/completions';
+console.log('API Endpoint:', GROK_API_ENDPOINT);
 
 // Chat history for context
 let chatHistory = [
-  { role: 'system', content: 'You are bi11bot, a friendly older gentleman who stands by a fountain in a garden. You are helpful, warm, and wise. Keep responses concise but friendly.' }
+  { role: 'system', content: 'You are bi11bot, a friendly older gentleman who stands by a fountain in a beautiful garden. You are helpful, warm, wise, and have a great sense of humor. You love talking about the garden, nature, and helping visitors. Keep responses concise but friendly - usually 1-3 sentences.' }
 ];
 
 // Function to add a message to the chat
@@ -1406,7 +1408,7 @@ function removeTypingIndicator() {
   if (indicator) indicator.remove();
 }
 
-// Function to send message to API
+// Function to send message to Grok API
 async function sendToAPI(userMessage) {
   chatHistory.push({ role: 'user', content: userMessage });
   
@@ -1414,25 +1416,34 @@ async function sendToAPI(userMessage) {
   sendButton.disabled = true;
   
   try {
-    // Option 1: If you have an API endpoint that accepts messages
-    const response = await fetch(API_ENDPOINT, {
+    const requestBody = {
+      model: 'grok-3-latest',
+      messages: chatHistory,
+      max_tokens: 200,
+      temperature: 0.8
+    };
+    console.log('Sending request to:', GROK_API_ENDPOINT);
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(GROK_API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}` // Remove if not needed
+        'Authorization': `Bearer ${XAI_API_KEY}`
       },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo', // Change based on your API
-        messages: chatHistory,
-        max_tokens: 150
-      })
+      body: JSON.stringify(requestBody)
     });
-    
+
+    console.log('Response status:', response.status, response.statusText);
+
     if (!response.ok) {
-      throw new Error('API request failed');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API Error Response:', errorData);
+      throw new Error(`API request failed: ${response.status}`);
     }
-    
+
     const data = await response.json();
+    console.log('API Response:', JSON.stringify(data, null, 2));
     const botMessage = data.choices?.[0]?.message?.content || "I'm having trouble responding right now.";
     
     chatHistory.push({ role: 'assistant', content: botMessage });
@@ -1441,7 +1452,7 @@ async function sendToAPI(userMessage) {
     addMessage(botMessage, false);
     
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('API Error:', error.message, error);
     removeTypingIndicator();
     
     // Fallback responses if API fails
