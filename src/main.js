@@ -1338,6 +1338,219 @@ function createClouds() {
 const clouds = createClouds();
 scene.add(clouds);
 
+// ============ BILL CLICK DETECTION & CHAT ============
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const chatBox = document.getElementById('chatBox');
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const sendButton = document.getElementById('sendMessage');
+const closeChat = document.getElementById('closeChat');
+const clickHint = document.getElementById('clickHint');
+
+let isChatOpen = false;
+
+// API endpoint configuration - change this to your actual API endpoint
+const API_ENDPOINT = 'https://api.openai.com/v1/chat/completions'; // Example endpoint
+const API_KEY = ''; // Add your API key here if needed
+
+// Chat history for context
+let chatHistory = [
+  { role: 'system', content: 'You are bi11bot, a friendly older gentleman who stands by a fountain in a garden. You are helpful, warm, and wise. Keep responses concise but friendly.' }
+];
+
+// Function to add a message to the chat
+function addMessage(text, isUser = false) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+  
+  const senderSpan = document.createElement('span');
+  senderSpan.className = 'sender';
+  senderSpan.textContent = isUser ? 'You' : 'bi11bot';
+  
+  const bubbleDiv = document.createElement('div');
+  bubbleDiv.className = 'bubble';
+  bubbleDiv.textContent = text;
+  
+  messageDiv.appendChild(senderSpan);
+  messageDiv.appendChild(bubbleDiv);
+  chatMessages.appendChild(messageDiv);
+  
+  // Scroll to bottom
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Function to show typing indicator
+function showTypingIndicator() {
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'message bot';
+  typingDiv.id = 'typingIndicator';
+  
+  const senderSpan = document.createElement('span');
+  senderSpan.className = 'sender';
+  senderSpan.textContent = 'bi11bot';
+  
+  const indicatorDiv = document.createElement('div');
+  indicatorDiv.className = 'bubble typing-indicator';
+  indicatorDiv.innerHTML = '<span></span><span></span><span></span>';
+  
+  typingDiv.appendChild(senderSpan);
+  typingDiv.appendChild(indicatorDiv);
+  chatMessages.appendChild(typingDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Function to remove typing indicator
+function removeTypingIndicator() {
+  const indicator = document.getElementById('typingIndicator');
+  if (indicator) indicator.remove();
+}
+
+// Function to send message to API
+async function sendToAPI(userMessage) {
+  chatHistory.push({ role: 'user', content: userMessage });
+  
+  showTypingIndicator();
+  sendButton.disabled = true;
+  
+  try {
+    // Option 1: If you have an API endpoint that accepts messages
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}` // Remove if not needed
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo', // Change based on your API
+        messages: chatHistory,
+        max_tokens: 150
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('API request failed');
+    }
+    
+    const data = await response.json();
+    const botMessage = data.choices?.[0]?.message?.content || "I'm having trouble responding right now.";
+    
+    chatHistory.push({ role: 'assistant', content: botMessage });
+    
+    removeTypingIndicator();
+    addMessage(botMessage, false);
+    
+  } catch (error) {
+    console.error('API Error:', error);
+    removeTypingIndicator();
+    
+    // Fallback responses if API fails
+    const fallbackResponses = [
+      "Hello there, friend! It's a lovely day by the fountain, isn't it?",
+      "Ah, welcome to the garden! I've been tending to this place for many years.",
+      "The sound of the fountain always brings me peace. What brings you here today?",
+      "I'm bi11bot! Feel free to ask me anything about the garden.",
+      "The weather is quite nice today. Perfect for a stroll around the fountain!",
+      "Have you seen the flowers? They're blooming beautifully this season.",
+    ];
+    const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    addMessage(randomResponse, false);
+  }
+  
+  sendButton.disabled = false;
+  chatInput.focus();
+}
+
+// Handle send message
+function handleSendMessage() {
+  const message = chatInput.value.trim();
+  if (!message) return;
+  
+  addMessage(message, true);
+  chatInput.value = '';
+  sendToAPI(message);
+}
+
+// Event listeners for chat
+sendButton.addEventListener('click', handleSendMessage);
+
+chatInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    handleSendMessage();
+  }
+});
+
+closeChat.addEventListener('click', () => {
+  chatBox.classList.remove('visible');
+  isChatOpen = false;
+  controls.lock(); // Re-lock controls when closing chat
+});
+
+// Click detection for Bill
+function onMouseClick(event) {
+  // Don't process if chat is open or controls are not locked
+  if (isChatOpen) return;
+  
+  // Calculate mouse position in normalized device coordinates
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  
+  // Update the picking ray with the camera and mouse position
+  raycaster.setFromCamera(mouse, camera);
+  
+  // Get all objects that Bill is made of
+  const billObjects = [];
+  bill.traverse((child) => {
+    if (child.isMesh) {
+      billObjects.push(child);
+    }
+  });
+  
+  // Check for intersections with Bill
+  const intersects = raycaster.intersectObjects(billObjects, true);
+  
+  if (intersects.length > 0) {
+    // Clicked on Bill! Open the chat
+    controls.unlock();
+    chatBox.classList.add('visible');
+    isChatOpen = true;
+    chatInput.focus();
+  }
+}
+
+// Add click event listener
+document.addEventListener('click', onMouseClick);
+
+// Show hint when looking at Bill
+let isLookingAtBill = false;
+
+function checkLookingAtBill() {
+  if (isChatOpen || !controls.isLocked) {
+    clickHint.style.display = 'none';
+    return;
+  }
+  
+  // Cast ray from center of screen
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  
+  const billObjects = [];
+  bill.traverse((child) => {
+    if (child.isMesh) {
+      billObjects.push(child);
+    }
+  });
+  
+  const intersects = raycaster.intersectObjects(billObjects, true);
+  
+  if (intersects.length > 0 && intersects[0].distance < 15) {
+    clickHint.style.display = 'block';
+    isLookingAtBill = true;
+  } else {
+    clickHint.style.display = 'none';
+    isLookingAtBill = false;
+  }
+}
+
 // ============ HANDLE RESIZE ============
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -1447,6 +1660,9 @@ function animate() {
     camera.position.x = Math.max(-bounds, Math.min(bounds, camera.position.x));
     camera.position.z = Math.max(-bounds, Math.min(bounds, camera.position.z));
   }
+
+  // Check if player is looking at Bill
+  checkLookingAtBill();
 
   prevTime = time;
   renderer.render(scene, camera);
